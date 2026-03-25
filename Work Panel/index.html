@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blanc — Авторизация</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{--bg:#020408;--accent:#7c6cff;--accent2:#00e5d0;--glow:rgba(124,108,255,0.5);--glow2:rgba(0,229,208,0.4);--text:#ecf0ff;--muted:#5a6a8a;--card:rgba(8,12,24,0.75);--border:rgba(255,255,255,0.06)}
+
+        html,body{height:100%}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+
+        canvas#particles{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+        .orb{position:fixed;border-radius:50%;filter:blur(120px);opacity:.45;pointer-events:none;z-index:0;animation:orbFloat 12s ease-in-out infinite alternate}
+        .orb-1{width:560px;height:560px;background:radial-gradient(circle,rgba(124,108,255,0.55),transparent 70%);top:-15%;left:-12%}
+        .orb-2{width:480px;height:480px;background:radial-gradient(circle,rgba(0,229,208,0.4),transparent 70%);bottom:-12%;right:-10%;animation-delay:-6s;animation-duration:15s}
+        .orb-3{width:340px;height:340px;background:radial-gradient(circle,rgba(192,75,255,0.25),transparent 70%);top:55%;left:60%;animation-delay:-3s;animation-duration:18s}
+        @keyframes orbFloat{0%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.08)}100%{transform:translate(-20px,15px) scale(0.95)}}
+
+        .card{position:relative;z-index:10;width:100%;max-width:470px;margin:16px;background:var(--card);backdrop-filter:blur(44px) saturate(1.7);border:1px solid var(--border);border-radius:34px;padding:52px 44px 44px;text-align:center;box-shadow:0 0 0 1px rgba(255,255,255,0.03),0 50px 100px -20px rgba(0,0,0,0.7),0 0 80px -15px var(--glow);animation:cardIn .7s cubic-bezier(.22,1,.36,1) both}
+        .card::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(124,108,255,0.7),rgba(0,229,208,0.45),transparent);border-radius:1px}
+        @keyframes cardIn{from{opacity:0;transform:translateY(30px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+        .logo-wrap{margin-bottom:28px;display:flex;justify-content:center}
+        .logo-icon{width:76px;height:76px;border-radius:22px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:34px;color:#fff;box-shadow:0 10px 40px var(--glow),0 0 0 1px rgba(255,255,255,0.1);position:relative;animation:logoPulse 3s ease-in-out infinite}
+        .logo-icon::after{content:'';position:absolute;inset:-4px;border-radius:26px;background:linear-gradient(135deg,var(--accent),var(--accent2));opacity:.25;filter:blur(12px);z-index:-1}
+        @keyframes logoPulse{0%,100%{box-shadow:0 8px 32px var(--glow)}50%{box-shadow:0 8px 48px var(--glow),0 0 20px var(--glow2)}}
+
+        h1{font-size:28px;font-weight:900;letter-spacing:-0.04em;margin-bottom:6px;background:linear-gradient(135deg,#fff 30%,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .sub{color:var(--muted);font-size:14px;font-weight:500;margin-bottom:32px}
+
+        .code-box{position:relative;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:20px;padding:32px 24px 24px;margin-bottom:28px;overflow:hidden}
+        .code-box::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(124,108,255,0.06),transparent 60%);pointer-events:none;border-radius:inherit}
+        .code-label{position:absolute;top:12px;left:20px;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);opacity:.7}
+
+        .code-digits{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
+        .code-digit{width:48px;height:58px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;font-family:'Inter',monospace;letter-spacing:0;color:#fff;transition:all .3s;text-shadow:0 0 20px var(--glow)}
+        .code-digit.pop{animation:digitPop .4s cubic-bezier(.34,1.56,.64,1)}
+        @keyframes digitPop{0%{transform:scale(.7);opacity:0}100%{transform:scale(1);opacity:1}}
+
+        .timer-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden;margin-bottom:10px}
+        .timer-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width 1s linear;box-shadow:0 0 12px var(--glow2)}
+        .timer-text{font-size:13px;font-weight:600;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px}
+        .timer-text i{font-size:11px;color:var(--accent2)}
+
+        .bot-link{display:inline-flex;align-items:center;gap:10px;padding:14px 34px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#6050dd);color:#fff;text-decoration:none;font-weight:700;font-size:15px;border:none;cursor:pointer;transition:all .25s;box-shadow:0 6px 24px rgba(124,108,255,0.45);position:relative;overflow:hidden}
+        .bot-link::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(255,255,255,0.1),transparent);transform:translateX(-100%);transition:transform .5s}
+        .bot-link:hover::before{transform:translateX(100%)}
+        .bot-link:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(124,108,255,0.55)}
+        .bot-link i{font-size:18px}
+
+        .status{margin-top:28px;padding:14px 18px;border-radius:14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);animation:pulse 2s ease-in-out infinite;box-shadow:0 0 8px var(--glow2)}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.85)}}
+        .status.success{border-color:rgba(0,206,201,0.3);color:var(--accent2)}
+        .status.success .status-dot{background:#00e676;box-shadow:0 0 12px rgba(0,230,118,0.5)}
+
+        @media(max-width:520px){
+            .card{padding:36px 24px 32px;border-radius:24px;margin:12px}
+            h1{font-size:24px}
+            .code-digit{width:40px;height:48px;font-size:22px;border-radius:10px}
+            .bot-link{padding:12px 24px;font-size:14px}
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="card" id="loginCard">
+        <div class="logo-wrap">
+            <div class="logo-icon"><i class="fas fa-shield-halved"></i></div>
+        </div>
+        <h1>Blanc Panel</h1>
+        <div class="sub">Авторизация через Telegram</div>
+
+        <div class="code-box">
+            <div class="code-label">Код авторизации</div>
+            <div class="code-digits" id="authCode">
+                <div class="code-digit">-</div><div class="code-digit">-</div><div class="code-digit">-</div>
+                <div class="code-digit">-</div><div class="code-digit">-</div><div class="code-digit">-</div>
+            </div>
+            <div class="timer-bar"><div class="timer-fill" id="timerBar" style="width:100%"></div></div>
+            <div class="timer-text"><i class="far fa-clock"></i> <span id="timer">05:00</span></div>
+        </div>
+
+        <a href="#" class="bot-link" id="botLink">
+            <i class="fab fa-telegram"></i> Открыть Telegram бота
+        </a>
+
+        <div class="status" id="statusMsg">
+            <span class="status-dot"></span> Ожидание привязки аккаунта…
+        </div>
+    </div>
+
+    <script>
+        /* ── Particle canvas ── */
+        (function(){
+            const c=document.getElementById('particles'),x=c.getContext('2d');
+            let W,H,pts=[];
+            function resize(){W=c.width=innerWidth;H=c.height=innerHeight;pts=[];for(let i=0;i<60;i++)pts.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+.4,dx:(Math.random()-.5)*.3,dy:(Math.random()-.5)*.3,o:Math.random()*.5+.15})}
+            function draw(){x.clearRect(0,0,W,H);pts.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle=`rgba(124,108,255,${p.o})`;x.fill()});
+            for(let i=0;i<pts.length;i++){for(let j=i+1;j<pts.length;j++){const a=pts[i],b=pts[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<130){x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.strokeStyle=`rgba(0,229,208,${.06*(1-d/130)})`;x.lineWidth=.5;x.stroke()}}}
+            requestAnimationFrame(draw)}
+            resize();draw();addEventListener('resize',resize);
+        })();
+
+        let currentCode = null;
+        let timerInterval = null;
+        let checkInterval = null;
+        const TOTAL_SECONDS = 300;
+
+        function generateCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return code;
+        }
+
+        function setCodeDigits(code) {
+            const digits = document.querySelectorAll('#authCode .code-digit');
+            [...code].forEach((ch, i) => {
+                if (digits[i]) {
+                    digits[i].textContent = ch;
+                    digits[i].classList.remove('pop');
+                    void digits[i].offsetWidth;
+                    digits[i].classList.add('pop');
+                }
+            });
+        }
+
+        function startTimer(seconds = 300) {
+            if (timerInterval) clearInterval(timerInterval);
+            let remaining = seconds;
+            const timerEl = document.getElementById('timer');
+            const barEl = document.getElementById('timerBar');
+            timerInterval = setInterval(() => {
+                const mins = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                timerEl.textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+                barEl.style.width = `${(remaining / TOTAL_SECONDS) * 100}%`;
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    generateNewCode();
+                }
+                remaining--;
+            }, 1000);
+        }
+
+        async function generateNewCode() {
+            const response = await fetch('/api/auth.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'generate' })
+            });
+            const data = await response.json();
+            if (data.code) {
+                currentCode = data.code;
+                setCodeDigits(currentCode);
+                document.getElementById('botLink').href = `https://t.me/BLANCworkBot?start=${currentCode}`;
+                startTimer(300);
+                startChecking();
+            }
+        }
+
+        async function startChecking() {
+            if (checkInterval) clearInterval(checkInterval);
+            checkInterval = setInterval(async () => {
+                if (!currentCode) return;
+                const response = await fetch('/api/auth.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'check', code: currentCode })
+                });
+                const data = await response.json();
+                if (data.authenticated) {
+                    clearInterval(checkInterval);
+                    clearInterval(timerInterval);
+                    const st = document.getElementById('statusMsg');
+                    st.className = 'status success';
+                    st.innerHTML = '<span class="status-dot"></span> Успешно! Перенаправление…';
+                    setTimeout(() => {
+                        window.location.href = '/dashboard.html';
+                    }, 1500);
+                }
+            }, 2000);
+        }
+
+        generateNewCode();
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+[
+  {
+    "session": "f986855cc3b1041a3f9cdcdbd48e5dae",
+    "tg_id": 1916338307,
+    "username": "sloqz",
+    "balance": 0.0,
+    "total_profit": 0,
+    "status": "Novice worker",
+    "percent": 70,
+    "wallets": {
+      "trc20": "s1zoz",
+      "erc20": "Biba",
+      "bep20": "123",
+      "ton": "123"
+    }
+  },
+  {
+    "session": "5835e4ffcf911b9944b2e65c73e885b2",
+    "tg_id": 8744584452,
+    "username": "BlancSupport",
+    "balance": 0,
+    "total_profit": 0,
+    "status": "Novice worker",
+    "percent": 70,
+    "wallets": {
+      "trc20": "1",
+      "erc20": "",
+      "bep20": "",
+      "ton": ""
+    }
+  }
+]

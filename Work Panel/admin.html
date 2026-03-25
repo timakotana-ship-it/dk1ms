@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blanc — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg0:#09090b;--bg1:#0f0f12;--bg2:#18181b;--bg3:#1e1e22;
+            --border:rgba(255,255,255,.06);--border-hi:rgba(255,255,255,.1);
+            --text:#fafafa;--text2:#d4d4d8;--muted:#71717a;--muted2:#a1a1aa;
+            --accent:#f87171;--accent-l:#fca5a5;--accent-d:#dc2626;
+            --success:#34d399;--warn:#fbbf24;--danger:#f87171;--info:#60a5fa;
+            --card:rgba(15,15,18,.85);--glass:rgba(255,255,255,.03);
+            --radius:14px;--radius-sm:10px;
+            --mono:'JetBrains Mono',monospace;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg0);color:var(--text);min-height:100vh;display:flex;overflow-x:hidden}
+
+        /* BG */
+        body::before{content:'';position:fixed;inset:0;background:
+            radial-gradient(ellipse 60% 45% at 15% 10%,rgba(248,113,113,.07) 0%,transparent 50%),
+            radial-gradient(ellipse 50% 40% at 85% 85%,rgba(248,113,113,.04) 0%,transparent 50%);
+            pointer-events:none;z-index:0}
+        body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='40' height='40' fill='none'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23ffffff' fill-opacity='.02'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5}
+        canvas#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+        /* Scrollbar */
+        ::-webkit-scrollbar{width:5px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:rgba(248,113,113,.2);border-radius:99px}
+        ::-webkit-scrollbar-thumb:hover{background:rgba(248,113,113,.4)}
+
+        /* ═══ SIDEBAR ═══ */
+        .sidebar{width:240px;flex-shrink:0;background:var(--bg1);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;overflow-y:auto;z-index:10}
+        .sidebar::-webkit-scrollbar{width:0}
+        .sidebar-top{padding:20px 12px;flex:1}
+
+        .wordmark{display:flex;align-items:center;gap:11px;margin-bottom:28px;padding:0 6px 20px;border-bottom:1px solid var(--border)}
+        .wordmark-icon{width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex-shrink:0}
+        .wordmark-name{font-size:18px;font-weight:800;letter-spacing:-.03em;color:var(--text)}
+        .wordmark-sub{font-size:9px;color:var(--accent);font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
+
+        .nav-section-label{font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);padding:0 10px;margin:20px 0 6px}
+        .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);color:var(--muted2);font-size:13px;font-weight:500;cursor:pointer;transition:all .18s;margin-bottom:1px;position:relative;border:none;background:none;width:100%;text-align:left}
+        .nav-item i{width:16px;text-align:center;font-size:13px;flex-shrink:0;opacity:.7;transition:opacity .18s}
+        .nav-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+        .nav-item:hover i{opacity:1}
+        .nav-item.active{background:rgba(248,113,113,.08);color:var(--accent-l)}
+        .nav-item.active i{opacity:1;color:var(--accent)}
+        .nav-item.active::before{content:'';position:absolute;left:0;top:25%;bottom:25%;width:2px;border-radius:0 3px 3px 0;background:var(--accent)}
+        .nav-item .nb{margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:99px;background:rgba(248,113,113,.12);color:var(--accent);min-width:20px;text-align:center}
+
+        .sidebar-footer{padding:14px 12px;border-top:1px solid var(--border)}
+        .sidebar-footer a{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:12px;font-weight:500;transition:all .18s}
+        .sidebar-footer a:hover{background:rgba(255,255,255,.04);color:var(--text)}
+        .sidebar-footer a i{font-size:12px;width:16px;text-align:center}
+
+        /* ═══ MAIN ═══ */
+        .main{margin-left:240px;flex:1;min-height:100vh;padding:28px 32px 60px;position:relative;z-index:1}
+        .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+        .page-title{font-size:22px;font-weight:800;letter-spacing:-.03em;color:var(--text)}
+        .page-sub{color:var(--muted);font-size:12px;margin-top:2px;font-weight:500}
+        .badge-admin{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;background:rgba(248,113,113,.12);color:#fca5a5;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-left:8px}
+
+        /* ═══ CARDS ═══ */
+        .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px;position:relative;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+        .card:hover{border-color:var(--border-hi);box-shadow:0 8px 40px rgba(0,0,0,.3)}
+        .card-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+        .card-title{font-size:14px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:8px}
+        .card-title i{font-size:12px;color:var(--muted);opacity:.6}
+        .card-hint{color:var(--muted);font-size:13px;line-height:1.6;margin-bottom:16px}
+
+        /* ═══ STATS ═══ */
+        .stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+        .stat-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--radius);padding:20px 18px;position:relative;overflow:hidden;transition:all .25s}
+        .stat-card:hover{border-color:var(--border-hi);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.25)}
+        .stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px}
+        .s-red::after{background:linear-gradient(90deg,var(--accent),transparent)}
+        .s-green::after{background:linear-gradient(90deg,var(--success),transparent)}
+        .s-blue::after{background:linear-gradient(90deg,var(--info),transparent)}
+        .s-warn::after{background:linear-gradient(90deg,var(--warn),transparent)}
+        .s-purple::after{background:linear-gradient(90deg,#a78bfa,transparent)}
+        .s-cyan::after{background:linear-gradient(90deg,#22d3ee,transparent)}
+
+        .stat-icon{width:36px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:14px;margin-bottom:12px}
+        .s-red .stat-icon{background:rgba(248,113,113,.1);color:var(--accent)}
+        .s-green .stat-icon{background:rgba(52,211,153,.1);color:var(--success)}
+        .s-blue .stat-icon{background:rgba(96,165,250,.1);color:var(--info)}
+        .s-warn .stat-icon{background:rgba(251,191,36,.1);color:var(--warn)}
+        .s-purple .stat-icon{background:rgba(167,139,250,.1);color:#a78bfa}
+        .s-cyan .stat-icon{background:rgba(34,211,238,.1);color:#22d3ee}
+
+        .stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px}
+        .stat-value{font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--text)}
+        .stat-sub{font-size:11px;color:var(--muted);margin-top:4px;font-weight:500}
+
+        /* ═══ TABS ═══ */
+        .tab-content{display:none}
+        .tab-content.active{display:block;animation:fadeIn .25s ease}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+        /* ═══ BUTTONS ═══ */
+        .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;border-radius:var(--radius-sm);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;border:0;transition:all .18s}
+        .btn-primary{background:var(--accent);color:#fff}
+        .btn-primary:hover{background:var(--accent-l);transform:translateY(-1px);box-shadow:0 4px 16px rgba(248,113,113,.25)}
+        .btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border)}
+        .btn-ghost:hover{background:rgba(255,255,255,.04);color:var(--text);border-color:var(--border-hi)}
+        .btn-danger{background:rgba(248,113,113,.08);color:var(--danger);border:1px solid rgba(248,113,113,.15)}
+        .btn-danger:hover{background:rgba(248,113,113,.15)}
+        .btn-sm{padding:6px 11px;font-size:11px;border-radius:8px}
+        .btn-icon{width:30px;height:30px;padding:0;justify-content:center;border-radius:7px}
+
+        /* ═══ INPUTS ═══ */
+        .input-group{display:grid;gap:5px}
+        .input-group label{font-size:11px;font-weight:600;color:var(--muted2);display:flex;align-items:center;gap:6px}
+        .input-group input,.input-group select,.input-group textarea{width:100%;padding:10px 13px;background:var(--bg0);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--mono);font-size:12px;transition:all .2s}
+        .input-group input:focus,.input-group select:focus,.input-group textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(248,113,113,.12)}
+        .input-group textarea{resize:vertical;min-height:100px;font-family:var(--mono);line-height:1.6}
+        select option{background:var(--bg2);color:var(--text)}
+
+        /* ═══ CHIPS ═══ */
+        .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:500;background:var(--glass);color:var(--muted2);border:1px solid var(--border);white-space:nowrap;transition:all .15s}
+        .chip:hover{border-color:var(--border-hi);background:rgba(255,255,255,.05)}
+        .chip i{font-size:9px;opacity:.6}
+
+        /* ═══ BADGES ═══ */
+        .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+        .badge-green{background:rgba(52,211,153,.1);color:var(--success);border:1px solid rgba(52,211,153,.15)}
+        .badge-orange{background:rgba(251,191,36,.1);color:var(--warn);border:1px solid rgba(251,191,36,.15)}
+        .badge-red{background:rgba(248,113,113,.1);color:var(--danger);border:1px solid rgba(248,113,113,.15)}
+        .badge-blue{background:rgba(96,165,250,.1);color:var(--info);border:1px solid rgba(96,165,250,.15)}
+        .badge-gray{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
+        .badge-purple{background:rgba(167,139,250,.1);color:#a78bfa;border:1px solid rgba(167,139,250,.15)}
+
+        /* ═══ ITEM ROWS ═══ */
+        .item-row{padding:14px;border-radius:var(--radius-sm);background:var(--bg2);border:1px solid var(--border);margin-bottom:8px;transition:all .18s;position:relative}
+        .item-row:hover{border-color:var(--border-hi);background:var(--bg3)}
+        .item-head{display:flex;align-items:flex-start;gap:10px}
+        .item-body{flex:1;min-width:0}
+        .item-actions{flex-shrink:0;display:flex;gap:5px;align-items:flex-start;flex-wrap:wrap}
+        .item-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px}
+        .item-sub{font-size:11px;color:var(--muted);margin-bottom:7px;font-weight:500}
+        .chips-row{display:flex;flex-wrap:wrap;gap:5px}
+
+        /* ═══ INLINE EDIT ═══ */
+        .inline-input{width:80px;padding:4px 8px;background:var(--bg0);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:var(--mono);transition:all .2s;outline:none}
+        .inline-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(248,113,113,.12)}
+
+        /* ═══ EMPTY STATE ═══ */
+        .empty-state{text-align:center;padding:44px 20px;color:var(--muted)}
+        .empty-state i{font-size:32px;margin-bottom:12px;display:block;opacity:.15}
+        .empty-state p{font-size:12px;font-weight:500}
+
+        /* ═══ SECURITY BAR ═══ */
+        .sec-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius-sm);background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.12);margin-bottom:20px;font-size:12px;color:var(--success);font-weight:500}
+        .sec-dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success);animation:secPulse 2s ease infinite;flex-shrink:0}
+        @keyframes secPulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+        /* Search */
+        .search-input{width:220px;padding:7px 13px;background:var(--bg0);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit}
+        .search-input:focus{border-color:rgba(248,113,113,.3);box-shadow:0 0 0 2px rgba(248,113,113,.1)}
+        .search-input::placeholder{color:var(--muted)}
+
+        /* ═══ TOASTS ═══ */
+        .toast-stack{position:fixed;top:16px;right:16px;display:flex;flex-direction:column;gap:6px;width:min(340px,calc(100vw - 24px));z-index:100}
+        .toast{padding:12px 16px;border-radius:var(--radius-sm);background:var(--bg2);border:1px solid var(--border-hi);box-shadow:0 12px 36px rgba(0,0,0,.4);animation:toastIn .3s ease;transition:opacity .2s,transform .2s}
+        .toast-title{font-size:12px;font-weight:700;margin-bottom:1px}
+        .toast-msg{font-size:11px;color:var(--muted);font-weight:500}
+        .toast-success{border-left:2px solid var(--success)}
+        .toast-error{border-left:2px solid var(--danger)}
+        .toast-info{border-left:2px solid var(--accent)}
+        @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+        /* ═══ RESPONSIVE ═══ */
+        @media(max-width:740px){
+            body{display:block}
+            .sidebar{position:fixed;top:auto;bottom:0;left:0;right:0;width:100%;height:60px;flex-direction:row;border-right:0;border-top:1px solid var(--border);overflow:visible;z-index:20}
+            .sidebar-top{display:flex;flex-direction:row;align-items:stretch;padding:0;overflow-x:auto;overflow-y:hidden;flex:1;scrollbar-width:none}
+            .sidebar-top::-webkit-scrollbar{display:none}
+            .wordmark,.nav-section-label,.sidebar-footer{display:none!important}
+            .nav-item{flex-direction:column;gap:2px;padding:6px 8px;border-radius:0;font-size:9px;font-weight:600;min-width:52px;flex:1;align-items:center;justify-content:center;height:60px;margin:0;border-top:2px solid transparent}
+            .nav-item::before{display:none!important}
+            .nav-item i{font-size:16px;width:auto}
+            .nav-item .nb{position:absolute;top:4px;right:6px;min-width:16px;font-size:9px;padding:1px 4px;margin-left:0}
+            .nav-item.active{background:rgba(248,113,113,.06);border-top-color:var(--accent);border-radius:0;color:var(--accent)}
+            .main{margin-left:0;margin-bottom:60px;padding:16px 14px 24px}
+            .stats-row{grid-template-columns:1fr 1fr;gap:8px}
+            .page-title{font-size:18px}
+            .stat-value{font-size:20px}
+            .item-head{flex-wrap:wrap}
+            .item-actions{flex-wrap:wrap;gap:4px}
+            .btn-sm{padding:5px 9px;font-size:10px}
+            .chips-row{gap:4px}
+            .search-input{width:140px}
+        }
+    </style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+
+<aside class="sidebar">
+    <div class="sidebar-top">
+        <div class="wordmark">
+            <div class="wordmark-icon"><i class="fas fa-shield-halved"></i></div>
+            <div>
+                <div class="wordmark-name">Blanc</div>
+                <div class="wordmark-sub">Admin Panel</div>
+            </div>
+        </div>
+
+        <div class="nav-section-label">Обзор</div>
+        <button class="nav-item active" data-tab="overview"><i class="fas fa-gauge"></i> Dashboard</button>
+
+        <div class="nav-section-label">Управление</div>
+        <button class="nav-item" data-tab="workers"><i class="fas fa-users"></i> Воркеры</button>
+        <button class="nav-item" data-tab="logs"><i class="fas fa-stream"></i> Все логи</button>
+        <button class="nav-item" data-tab="withdrawals"><i class="fas fa-money-bill-transfer"></i> Выводы</button>
+
+        <div class="nav-section-label">Инструменты</div>
+        <button class="nav-item" data-tab="broadcast"><i class="fas fa-bullhorn"></i> Рассылка</button>
+        <button class="nav-item" data-tab="curators"><i class="fas fa-user-tag"></i> Кураторы</button>
+
+        <div class="nav-section-label">Безопасность</div>
+        <button class="nav-item" data-tab="audit"><i class="fas fa-clock-rotate-left"></i> Аудит</button>
+    </div>
+    <div class="sidebar-footer">
+        <a href="/dashboard.html"><i class="fas fa-arrow-left"></i> Панель воркера</a>
+    </div>
+</aside>
+
+<main class="main">
+
+    <!-- ═══ OVERVIEW ═══ -->
+    <section id="overview" class="tab-content active">
+        <div class="page-header">
+            <div>
+                <div style="display:flex;align-items:center">
+                    <div class="page-title">Dashboard</div>
+                    <span class="badge-admin"><i class="fas fa-lock" style="font-size:9px"></i> ADMIN</span>
+                </div>
+                <div class="page-sub">Глобальная статистика системы</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="refresh()"><i class="fas fa-arrows-rotate"></i> Обновить</button>
+        </div>
+
+        <div class="sec-bar">
+            <span class="sec-dot"></span>
+            <span>Сессия защищена — IP-lock, HMAC-подпись, 4ч истечение</span>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card s-red">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-label">Воркеры</div>
+                <div class="stat-value" id="s-workers">—</div>
+                <div class="stat-sub">зарегистрировано</div>
+            </div>
+            <div class="stat-card s-green">
+                <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-label">Объём</div>
+                <div class="stat-value" id="s-volume">—</div>
+                <div class="stat-sub">общий</div>
+            </div>
+            <div class="stat-card s-blue">
+                <div class="stat-icon"><i class="fas fa-plug"></i></div>
+                <div class="stat-label">Коннекты</div>
+                <div class="stat-value" id="s-connects">—</div>
+                <div class="stat-sub">подключений</div>
+            </div>
+            <div class="stat-card s-green">
+                <div class="stat-icon"><i class="fas fa-rocket"></i></div>
+                <div class="stat-label">Профиты</div>
+                <div class="stat-value" id="s-profits">—</div>
+                <div class="stat-sub">результатов</div>
+            </div>
+            <div class="stat-card s-cyan">
+                <div class="stat-icon"><i class="fas fa-eye"></i></div>
+                <div class="stat-label">Переходы</div>
+                <div class="stat-value" id="s-clicks">—</div>
+                <div class="stat-sub">кликов</div>
+            </div>
+            <div class="stat-card s-warn">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-label">Ждут вывода</div>
+                <div class="stat-value" id="s-withdrawals">—</div>
+                <div class="stat-sub">заявок</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title"><i class="fas fa-bolt"></i> Последние 25 событий</span>
+                <button class="btn btn-ghost btn-sm" onclick="loadOverviewLogs()"><i class="fas fa-rotate"></i> Refresh</button>
+            </div>
+            <div id="overviewLogs"></div>
+        </div>
+    </section>
+
+    <!-- ═══ WORKERS ═══ -->
+    <section id="workers" class="tab-content">
+        <div class="page-header">
+            <div>
+                <div class="page-title">Воркеры</div>
+                <div class="page-sub">Управление аккаунтами</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <input type="text" class="search-input" placeholder="Поиск по ID / username…" oninput="filterWorkers(this.value)">
+                <button class="btn btn-ghost btn-sm" onclick="loadWorkers()"><i class="fas fa-rotate"></i></button>
+            </div>
+        </div>
+        <div id="workersList"></div>
+    </section>
+
+    <!-- ═══ LOGS ═══ -->
+    <section id="logs" class="tab-content">
+        <div class="page-header">
+            <div>
+                <div class="page-title">Все логи</div>
+                <div class="page-sub">Полная история событий</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <select class="search-input" style="width:140px" onchange="filterLogs()" id="log-type-filter">
+                    <option value="">Все типы</option>
+                    <option value="connect">Коннект</option>
+                    <option value="profit">Profit</option>
+                    <option value="click">Переход</option>
+                </select>
+                <button class="btn btn-ghost btn-sm" onclick="loadAllLogs()"><i class="fas fa-rotate"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="clearAllLogs()"><i class="fas fa-trash"></i> Очистить</button>
+            </div>
+        </div>
+        <div id="logsList"></div>
+    </section>
+
+    <!-- ═══ WITHDRAWALS ═══ -->
+    <section id="withdrawals" class="tab-content">
+        <div class="page-header">
+            <div>
+                <div class="page-title">Выводы</div>
+                <div class="page-sub">Все заявки на вывод</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadWithdrawals()"><i class="fas fa-rotate"></i></button>
+        </div>
+        <div id="withdrawalsList"></div>
+    </section>
+
+    <!-- ═══ BROADCAST ═══ -->
+    <section id="broadcast" class="tab-content">
+        <div class="page-header">
+            <div>
+                <div class="page-title">Рассылка</div>
+                <div class="page-sub">Отправить сообщение всем воркерам</div>
+            </div>
+        </div>
+        <div class="card" style="max-width:640px">
+            <div class="card-header">
+                <span class="card-title"><i class="fas fa-paper-plane"></i> Compose</span>
+            </div>
+            <div class="input-group" style="margin-bottom:14px">
+                <label>Текст сообщения</label>
+                <textarea id="broadcast-text" rows="6" placeholder="Введите текст…&#10;&#10;Поддерживается HTML:&#10;&lt;b&gt;жирный&lt;/b&gt;, &lt;i&gt;курсив&lt;/i&gt;"></textarea>
+            </div>
+            <div class="input-group" style="margin-bottom:14px">
+                <label>Форматирование</label>
+                <select id="broadcast-mode">
+                    <option value="HTML">HTML</option>
+                    <option value="Markdown">Markdown</option>
+                    <option value="">Без форматирования</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px">
+                <button class="btn btn-primary" onclick="sendBroadcast()"><i class="fas fa-paper-plane"></i> Отправить</button>
+                <button class="btn btn-ghost" onclick="previewBroadcast()"><i class="fas fa-eye"></i> Превью</button>
+            </div>
+            <div id="broadcast-preview" style="display:none;padding:14px;background:var(--bg0);border-radius:var(--radius-sm);border:1px solid var(--border);font-size:13px;white-space:pre-wrap;color:var(--text2);font-family:var(--mono)"></div>
+        </div>
+        <div class="card" style="max-width:640px">
+            <div class="card-header"><span class="card-title"><i class="fas fa-bolt"></i> Быстрые шаблоны</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-sm" onclick="tpl('maintenance')">🛠 Тех. работы</button>
+                <button class="btn btn-ghost btn-sm" onclick="tpl('update')">🚀 Обновление</button>
+                <button class="btn btn-ghost btn-sm" onclick="tpl('promo')">🎁 Промо</button>
+                <button class="btn btn-ghost btn-sm" onclick="tpl('warning')">⚠️ Предупреждение</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ CURATORS ═══ -->
+    <section id="curators" class="tab-content">
+        <div class="page-header">
+            <div>
+                <div class="page-title">Кураторы</div>
+                <div class="page-sub">Список для команды /curator в боте</div>
+            </div>
+        </div>
+        <div class="card" style="max-width:600px">
+            <div class="card-header">
+                <span class="card-title"><i class="fas fa-user-tag"></i> Список кураторов</span>
+                <button class="btn btn-primary btn-sm" onclick="addCurator()"><i class="fas fa-plus"></i> Добавить</button>
+            </div>
+            <div id="curators-list"></div>
+            <button class="btn btn-primary" onclick="saveCurators()" style="margin-top:14px"><i class="fas fa-floppy-disk"></i> Сохранить</button>
+        </div>
+    </section>
+
+    <!-- ═══ AUDIT ═══ -->
+    <section id="audit" class="tab-content">
+        <div class="page-header">
+            <div>
+                <div class="page-title">Аудит</div>
+                <div class="page-sub">История действий администратора</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadAudit()"><i class="fas fa-rotate"></i> Refresh</button>
+        </div>
+        <div id="auditList"></div>
+    </section>
+
+</main>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+'use strict';
+
+// ── State ──
+let _workers = [];
+let _allLogs = [];
+let _curators = [];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fm = v => '$' + Number(v || 0).toFixed(2);
+const sh = v => v ? v.slice(0, 8) + '…' : '—';
+
+function flag(cc) {
+    if (!cc || cc.length !== 2 || cc === 'N/A' || !/^[A-Za-z]{2}$/.test(cc)) return '';
+    const u = cc.toUpperCase();
+    return String.fromCodePoint(0x1F1E0 + u.charCodeAt(0) - 65) + String.fromCodePoint(0x1F1E0 + u.charCodeAt(1) - 65);
+}
+
+// ── Toast ──
+function toast(title, msg, type = 'info') {
+    const s = $('toastStack');
+    const el = document.createElement('div');
+    el.className = 'toast toast-' + type;
+    el.innerHTML = '<div class="toast-title">' + esc(title) + '</div><div class="toast-msg">' + esc(msg) + '</div>';
+    s.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(14px)'; setTimeout(() => el.remove(), 200); }, 3500);
+}
+
+// ── Tab switching ──
+function sw(name) {
+    document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item[data-tab]').forEach(n => n.classList.remove('active'));
+    $(name)?.classList.add('active');
+    document.querySelector('[data-tab="' + name + '"]')?.classList.add('active');
+    const loaders = { overview: refresh, workers: loadWorkers, logs: loadAllLogs, withdrawals: loadWithdrawals, curators: loadCurators, audit: loadAudit };
+    if (loaders[name]) loaders[name]();
+}
+document.querySelectorAll('.nav-item[data-tab]').forEach(it => it.addEventListener('click', () => sw(it.dataset.tab)));
+
+// ── API ──
+async function api(url, opts = {}) {
+    try {
+        const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', ...opts });
+        if (r.status === 403) { toast('Доступ запрещён', 'Сессия истекла или IP сменился', 'error'); return null; }
+        if (r.status === 429) { toast('Лимит', 'Слишком много запросов — подождите', 'error'); return null; }
+        return r.json();
+    } catch (e) {
+        toast('Ошибка', 'Сервер недоступен', 'error');
+        return null;
+    }
+}
+
+// ── Animated counter ──
+function animVal(el, end, prefix, suffix) {
+    if (!el) return;
+    const start = parseFloat(el.textContent.replace(/[^0-9.\-]/g, '')) || 0;
+    if (Math.abs(start - end) < 0.01) return;
+    const t0 = performance.now(), dur = 600;
+    (function step(ts) {
+        const p = Math.min((ts - t0) / dur, 1), e = 1 - Math.pow(1 - p, 3);
+        const v = start + (end - start) * e;
+        if (suffix === '%') el.textContent = Math.round(v) + suffix;
+        else if (prefix === '$') el.textContent = prefix + v.toFixed(2);
+        else el.textContent = Math.round(v);
+        if (p < 1) requestAnimationFrame(step);
+    })(performance.now());
+}
+
+// ── Refresh overview ──
+async function refresh() { await loadStats(); await loadOverviewLogs(); }
+
+// ── Stats ──
+async function loadStats() {
+    const d = await api('/api/admin/stats.php');
+    if (!d) return;
+    animVal($('s-workers'), d.workers || 0, '', '');
+    animVal($('s-volume'), d.total_volume || 0, '$', '');
+    animVal($('s-connects'), d.connects || 0, '', '');
+    animVal($('s-profits'), d.profits || 0, '', '');
+    animVal($('s-clicks'), d.clicks || 0, '', '');
+    animVal($('s-withdrawals'), d.pending_withdrawals || 0, '', '');
+}
+
+// ── Log card (item-row style) ──
+function logCard(log) {
+    const types = {
+        profit:  ['<i class="fas fa-arrow-trend-up"></i> Profit',  'badge-green'],
+        connect: ['<i class="fas fa-plug"></i> Коннект', 'badge-orange'],
+        click:   ['<i class="fas fa-eye"></i> Переход',  'badge-blue'],
+    };
+    const [lbl, cls] = types[log.type] || ['<i class="fas fa-circle-dot"></i> Событие', 'badge-gray'];
+    const f = flag(log.country);
+    return '<div class="item-row"><div class="item-head"><div class="item-body">' +
+        '<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">' +
+            '<div class="item-title">' + lbl + '</div><span class="badge ' + cls + '">' + esc(log.type || 'event') + '</span>' +
+        '</div>' +
+        '<div class="item-sub"><i class="fas fa-hashtag" style="font-size:9px;opacity:.5"></i> ' + esc(log.id) + ' &nbsp;·&nbsp; <i class="far fa-clock" style="font-size:9px;opacity:.5"></i> ' + esc(log.date) + '</div>' +
+        '<div class="chips-row">' +
+            '<span class="chip"><i class="fas fa-globe"></i> ' + f + ' ' + esc(log.country || 'N/A') + '</span>' +
+            '<span class="chip"><i class="fas fa-wallet"></i> ' + sh(log.address) + '</span>' +
+            '<span class="chip"><i class="fas fa-scale-balanced"></i> ' + (log.balance ? fm(log.balance) : '—') + '</span>' +
+            '<span class="chip"><i class="fas fa-link"></i> ' + esc(log.link_code || '—') + '</span>' +
+            (log.ip ? '<span class="chip"><i class="fas fa-server"></i> ' + esc(log.ip) + '</span>' : '') +
+        '</div>' +
+    '</div></div></div>';
+}
+
+// ── Overview logs ──
+async function loadOverviewLogs() {
+    const d = await api('/api/admin/all_logs.php');
+    if (!d) return;
+    const el = $('overviewLogs');
+    const rows = d.slice(0, 25);
+    if (!rows.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Нет событий</p></div>'; return; }
+    el.innerHTML = rows.map(l => logCard(l)).join('');
+}
+
+// ── Workers ──
+async function loadWorkers() {
+    const d = await api('/api/admin/users.php');
+    if (!d) return;
+    _workers = d;
+    renderWorkers(_workers);
+}
+function filterWorkers(q) {
+    q = q.toLowerCase();
+    renderWorkers(_workers.filter(w => (w.username || '').toLowerCase().includes(q) || String(w.tg_id || '').includes(q)));
+}
+function renderWorkers(list) {
+    const el = $('workersList');
+    if (!list.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>Нет воркеров</p></div>'; return; }
+    el.innerHTML = list.map(w => {
+        return '<div class="item-row" id="wr-' + w.tg_id + '"><div class="item-head"><div class="item-body">' +
+            '<div class="item-title">@' + esc(w.username || '?') + '</div>' +
+            '<div class="item-sub"><i class="fas fa-fingerprint" style="font-size:9px;opacity:.5"></i> ' + esc(w.tg_id) + '</div>' +
+            '<div class="chips-row">' +
+                '<span class="chip"><i class="fas fa-tag"></i> <input class="inline-input" style="width:120px;border:none;background:transparent;padding:0;font-family:inherit;font-size:11px;color:var(--text2)" value="' + esc(w.status || '') + '" id="st-' + w.tg_id + '"></span>' +
+                '<span class="chip"><i class="fas fa-coins"></i> $<input type="number" class="inline-input" style="width:70px;border:none;background:transparent;padding:0;font-size:11px;color:var(--success)" value="' + (w.balance || 0) + '" id="bal-' + w.tg_id + '" step="0.01"></span>' +
+                '<span class="chip"><i class="fas fa-percent"></i> <input type="number" class="inline-input" style="width:40px;border:none;background:transparent;padding:0;font-size:11px;color:var(--accent)" value="' + (w.percent || 70) + '" id="pct-' + w.tg_id + '" step="1" min="0" max="100">%</span>' +
+                '<span class="chip" style="color:var(--success);border-color:rgba(52,211,153,.15)"><i class="fas fa-arrow-trend-up"></i> ' + fm(w.total_profit || 0) + '</span>' +
+            '</div>' +
+        '</div>' +
+        '<div class="item-actions">' +
+            '<button class="btn btn-ghost btn-sm" title="Сохранить" onclick="saveWorker(' + w.tg_id + ')"><i class="fas fa-check" style="color:var(--success)"></i></button>' +
+            '<button class="btn btn-danger btn-sm" title="Удалить" onclick="deleteWorker(' + w.tg_id + ',\'' + esc(w.username || '') + '\')"><i class="fas fa-trash"></i></button>' +
+        '</div></div></div>';
+    }).join('');
+}
+async function saveWorker(tg_id) {
+    const bal = parseFloat($('bal-' + tg_id)?.value || 0);
+    const pct = parseInt($('pct-' + tg_id)?.value || 70);
+    const st = ($('st-' + tg_id)?.value || '').trim();
+    const r = await api('/api/admin/edit_user.php', { method: 'POST', body: JSON.stringify({ tg_id, balance: bal, percent: pct, status: st }) });
+    if (r?.success) toast('Сохранено', 'Данные воркера обновлены', 'success'); else toast('Ошибка', r?.error || 'Не удалось сохранить', 'error');
+}
+async function deleteWorker(tg_id, name) {
+    if (!confirm('Удалить @' + name + ' (' + tg_id + ')?')) return;
+    const r = await api('/api/admin/delete_user.php', { method: 'POST', body: JSON.stringify({ tg_id }) });
+    if (r?.success) { toast('Удалено', 'Воркер удалён', 'success'); loadWorkers(); } else toast('Ошибка', r?.error || 'Не удалось удалить', 'error');
+}
+
+// ── All Logs ──
+async function loadAllLogs() {
+    const d = await api('/api/admin/all_logs.php');
+    if (!d) return;
+    _allLogs = d;
+    filterLogs();
+}
+function filterLogs() {
+    const type = $('log-type-filter').value;
+    const list = type ? _allLogs.filter(l => l.type === type) : _allLogs;
+    const el = $('logsList');
+    if (!list.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><p>Нет логов</p></div>'; return; }
+    el.innerHTML = list.map(l => logCard(l)).join('');
+}
+async function clearAllLogs() {
+    if (!confirm('Очистить ВСЕ логи? Это необратимо.')) return;
+    const r = await api('/api/admin/clear_all_logs.php', { method: 'POST' });
+    if (r?.success) { toast('Очищено', 'Все логи удалены', 'success'); _allLogs = []; filterLogs(); loadStats(); } else toast('Ошибка', r?.error || 'Не удалось очистить', 'error');
+}
+
+// ── Withdrawals ──
+async function loadWithdrawals() {
+    const d = await api('/api/admin/all_withdrawals.php');
+    if (!d) return;
+    const el = $('withdrawalsList');
+    if (!d.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-arrow-right-from-bracket"></i><p>Нет заявок</p></div>'; return; }
+    const sm = { pending: ['⏳ Ожидает', 'badge-orange'], in_progress: ['⚙️ В работе', 'badge-blue'], completed: ['✅ Выполнен', 'badge-green'], rejected: ['❌ Отклонён', 'badge-red'] };
+    el.innerHTML = d.map(w => {
+        const [sl, sc] = sm[w.status] || ['—', 'badge-gray'];
+        return '<div class="item-row"><div class="item-head"><div class="item-body">' +
+            '<div class="item-title">' + fm(w.amount || 0) + '</div>' +
+            '<div class="item-sub"><i class="far fa-clock" style="font-size:9px;opacity:.5"></i> ' + esc(w.date) + '</div>' +
+            '<div class="chips-row"><span class="badge ' + sc + '">' + sl + '</span></div>' +
+        '</div></div></div>';
+    }).join('');
+}
+
+// ── Broadcast ──
+const TEMPLATES = {
+    maintenance: '<b>🛠 Технические работы</b>\n\nПанель временно недоступна.\nВремя ожидания: ~30 минут.',
+    update:      '<b>🚀 Обновление системы</b>\n\nВышло обновление! Подробности в канале.',
+    promo:       '<b>🎁 Специальное предложение</b>\n\nБонус для активных воркеров.',
+    warning:     '<b>⚠️ Важное уведомление</b>\n\nСоблюдайте правила. Нарушения = бан.'
+};
+function tpl(name) { $('broadcast-text').value = TEMPLATES[name] || ''; $('broadcast-mode').value = 'HTML'; }
+async function sendBroadcast() {
+    const text = $('broadcast-text').value.trim();
+    if (!text) { toast('Ошибка', 'Введите текст', 'error'); return; }
+    const pm = $('broadcast-mode').value;
+    const r = await api('/api/admin/broadcast.php', { method: 'POST', body: JSON.stringify({ text, parse_mode: pm || null }) });
+    if (r?.success) toast('Отправлено', 'Sent: ' + r.sent + ', failed: ' + r.failed, 'success'); else toast('Ошибка', r?.error || 'Не удалось отправить', 'error');
+}
+function previewBroadcast() {
+    const el = $('broadcast-preview');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    el.textContent = $('broadcast-text').value;
+}
+
+// ── Curators ──
+async function loadCurators() {
+    const d = await api('/api/admin/curators.php');
+    if (!d) return;
+    _curators = d;
+    renderCurators();
+}
+function renderCurators() {
+    const el = $('curators-list');
+    if (!_curators.length) { el.innerHTML = '<div class="empty-state" style="padding:20px"><p>Нет кураторов</p></div>'; return; }
+    el.innerHTML = _curators.map((c, i) =>
+        '<div class="item-row" style="display:flex;align-items:center;gap:8px">' +
+            '<input class="inline-input" style="flex:1;width:auto" placeholder="@username" value="' + esc(c.username || '') + '" id="cur-u-' + i + '">' +
+            '<input class="inline-input" style="width:80px" placeholder="0%" value="' + esc(c.percent || '0%') + '" id="cur-p-' + i + '">' +
+            '<button class="btn btn-danger btn-sm btn-icon" onclick="removeCurator(' + i + ')"><i class="fas fa-xmark"></i></button>' +
+        '</div>'
+    ).join('');
+}
+function addCurator() { _curators.push({ username: '', percent: '0%' }); renderCurators(); setTimeout(() => $('cur-u-' + (_curators.length - 1))?.focus(), 50); }
+function removeCurator(i) { _curators.splice(i, 1); renderCurators(); }
+async function saveCurators() {
+    const list = [];
+    _curators.forEach((_, i) => {
+        const u = $('cur-u-' + i);
+        const p = $('cur-p-' + i);
+        if (u) list.push({ username: u.value.trim(), percent: (p ? p.value.trim() : '0%') });
+    });
+    const r = await api('/api/admin/curators.php', { method: 'POST', body: JSON.stringify({ curators: list }) });
+    if (r?.success) { toast('Сохранено', 'Кураторы обновлены', 'success'); _curators = list; renderCurators(); } else toast('Ошибка', r?.error || 'Не удалось сохранить', 'error');
+}
+
+// ── Audit ──
+async function loadAudit() {
+    const d = await api('/api/admin/audit.php');
+    if (!d) return;
+    const el = $('auditList');
+    if (!d.length) { el.innerHTML = '<div class="empty-state"><i class="fas fa-clock-rotate-left"></i><p>Нет записей аудита</p></div>'; return; }
+    el.innerHTML = d.map(a =>
+        '<div class="item-row"><div class="item-head"><div class="item-body">' +
+            '<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">' +
+                '<div class="item-title"><i class="fas fa-shield-halved" style="font-size:11px;color:var(--accent);opacity:.7"></i> ' + esc(a.action) + '</div>' +
+                '<span class="badge badge-purple">' + esc(a.action) + '</span>' +
+            '</div>' +
+            '<div class="item-sub"><i class="far fa-clock" style="font-size:9px;opacity:.5"></i> ' + esc(a.time) + '</div>' +
+            '<div class="chips-row">' +
+                '<span class="chip"><i class="fas fa-server"></i> ' + esc(a.ip) + '</span>' +
+                (a.detail ? '<span class="chip"><i class="fas fa-info-circle"></i> ' + esc(a.detail) + '</span>' : '') +
+            '</div>' +
+        '</div></div></div>'
+    ).join('');
+}
+
+// ── Init ──
+refresh();
+
+// ── Background grid (same as dashboard) ──
+(function() {
+    const c = document.getElementById('bgCanvas'), x = c.getContext('2d');
+    let W, H;
+    function resize() { W = c.width = innerWidth; H = c.height = innerHeight; draw(); }
+    function draw() {
+        x.clearRect(0, 0, W, H);
+        x.strokeStyle = 'rgba(248,113,113,0.018)';
+        x.lineWidth = 1;
+        const s = 80;
+        for (let i = s; i < W; i += s) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
+        for (let j = s; j < H; j += s) { x.beginPath(); x.moveTo(0, j); x.lineTo(W, j); x.stroke(); }
+        for (let i = s; i < W; i += s * 3) {
+            for (let j = s; j < H; j += s * 3) {
+                x.beginPath(); x.arc(i, j, 1, 0, Math.PI * 2);
+                x.fillStyle = 'rgba(248,113,113,0.06)'; x.fill();
+            }
+        }
+    }
+    resize(); addEventListener('resize', resize);
+})();
+</script>
+</body>
+</html>
